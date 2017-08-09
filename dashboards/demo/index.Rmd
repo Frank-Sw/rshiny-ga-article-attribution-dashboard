@@ -1,7 +1,7 @@
 ---
 output: 
   flexdashboard::flex_dashboard:
-    theme: spacelab
+    theme: lumen
     favicon: favicon_au.png
     vertical_layout: scroll
 runtime: shiny
@@ -20,7 +20,7 @@ paramViewId <- "demo" # demo
 #' @return report_title
 #' @return favicon_url
 #' 
-source("../../config.R")
+source("../config.R")
 
 # load packages
 library(flexdashboard)
