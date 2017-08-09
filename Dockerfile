@@ -1,4 +1,4 @@
-FROM gcr.io/ep---dev/github-empirical-path-gce-rshiny
+FROM gcr.io/ep-prod/github-empirical-path-gce-rshiny
 MAINTAINER Justin Marciszewski (justin@empiricalpath.com)
 
 # install R package dependencies
