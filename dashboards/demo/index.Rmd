@@ -1,0 +1,495 @@
+---
+output: 
+  flexdashboard::flex_dashboard:
+    theme: spacelab
+    favicon: favicon_au.png
+    vertical_layout: scroll
+runtime: shiny
+---
+
+```{r global}
+#' SET MASTER PARAMETER
+#' @param paramViewId a character string of the GA view
+#' 
+paramViewId <- "demo" # demo
+
+#' LOAD REMAINING PARAMETERS
+#' @param filepath
+#' 
+#' @return sourceData
+#' @return report_title
+#' @return favicon_url
+#' 
+source("../../config.R")
+
+# load packages
+library(flexdashboard)
+library(lubridate)
+library(dplyr)
+library(dygraphs)
+library(xts)
+library(DT)
+
+# keep complete cases only/remove any rows with NA to prevent Shiny load errors
+# http://stackoverflow.com/questions/4862178/remove-rows-with-nas-missing-values-in-data-frame
+sourceData <- sourceData[complete.cases(sourceData),]
+```
+
+---
+title: `r report_title`
+---
+
+Summary {data-orientation=rows}
+=====================================  
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+```{r inputs}
+dateRangeInput(inputId = "gaDate", 
+               label = "Calendar Date Range:", 
+               start = max(sourceData$date)-30, 
+               end = max(sourceData$date)-1, 
+               min = min(sourceData$date), 
+               max = max(sourceData$date), 
+               format = "M d, yyyy", 
+               startview = "month", 
+               weekstart = 0,
+               language = "en", 
+               separator = " to ",
+               width = NULL)
+
+dateRangeInput(inputId = "sessionFirstArticlePublishDate", 
+               label = "First Article Publish Date Range:", 
+               start = min(sourceData$sessionFirstArticlePublishDate), 
+               end = max(sourceData$sessionFirstArticlePublishDate),
+               min = min(sourceData$sessionFirstArticlePublishDate),
+               max = max(sourceData$sessionFirstArticlePublishDate), 
+               format = "M d, yyyy", 
+               startview = "month", 
+               weekstart = 0,
+               language = "en",
+               separator = " to ",
+               width = NULL)
+
+selectInput(inputId = "daily_totals_metric", 
+            label = "Show in Daily Totals Chart", 
+            choices = c("Articles" = "articles",
+                        "Sessions" = "sessions",
+                        "Unique Pageviews" = "uniquePageviews",
+                        "Events" = "events",
+                        "Event Conversion Rate" = "eventConversionRate",
+                        "Transactions" = "transactions",
+                        "Conversion Rate" = "conversionRate",
+                        "Revenue" = "revenue")
+            )
+
+# scan for url parameters on calendar date range or gaDate input
+observe({
+      
+      query <- parseQueryString(session$clientData$url_search)
+      
+      if (!is.null(query)) {
+        updateDateRangeInput(session, 
+                             "gaDate",
+                             start = query[["dateFrom"]],
+                             end = query[["dateTo"]])
+      }
+})
+```
+
+```{r selectedData}
+selectedData <- reactive({
+  req(input$gaDate)
+  req(input$sessionFirstArticlePublishDate)
+  
+  sourceData %>%  
+    dplyr::filter(date >= input$gaDate[1]) %>% 
+    dplyr::filter(date <= input$gaDate[2]) %>% 
+    dplyr::filter(sessionFirstArticlePublishDate >= input$sessionFirstArticlePublishDate[1]) %>% 
+    dplyr::filter(sessionFirstArticlePublishDate <= input$sessionFirstArticlePublishDate[2])
+  
+})
+
+dailyTotalData <- reactive({
+  
+  req(selectedData())
+  req(input$daily_totals_metric)
+  
+  selectedData <- selectedData()
+  
+  ## transform data
+  dt_ta <- selectedData %>% 
+    dplyr::group_by(sessionFirstArticlePublishDate) %>% 
+    dplyr::summarise(articles = n_distinct(sessionFirstArticleTitle))
+  
+  dt_sm <- selectedData %>% 
+    dplyr::group_by(date) %>% 
+    dplyr::summarise(
+      uniquePageviews = sum(uniquePageviews),
+      sessions = sum(sessions),      
+      events = sum(events),
+      eventConversionRate = sum(events) / sum(sessions), 
+      transactions = sum(transactions),
+      conversionRate = sum(transactions) / sum(sessions),
+      revenue = sum(revenue)
+    )
+  
+  total_data <- left_join(dt_sm, dt_ta, by = c(date = "sessionFirstArticlePublishDate"))
+  
+  # convert to timeseries
+  as.xts(total_data[input$daily_totals_metric], order.by = total_data$date) 
+
+})
+```
+
+![](`r logo_url`)
+
+Row 
+-----------------------------------------------------------------------
+
+### Daily Totals
+
+```{r dailyTotalsPlot}
+renderDygraph({
+  req(dailyTotalData())
+  
+  ts_data <- dailyTotalData()
+  
+    d <- dygraph(ts_data, 
+                 main = paste("Total ", input$daily_totals_metric, " by Day", sep = "") ) %>%
+      dySeries(input$daily_totals_metric, 
+               drawPoints = TRUE, 
+               label = input$daily_totals_metric) %>%
+      dyHighlight(highlightCircleSize = 5)    
+    
+    d
+
+  })
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Total Articles
+
+```{r totalArticles}
+renderValueBox({
+  valueBox(
+    value = comma(length(unique(selectedData()$sessionFirstArticleTitle))),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Unique Pageviews
+
+```{r totalUniquePageviews}
+renderValueBox({
+  valueBox(
+    value = comma(sum(selectedData()$uniquePageviews)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Sessions
+
+```{r totalSessions}
+renderValueBox({
+  valueBox(
+    value = comma(sum(selectedData()$sessions)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Events
+
+```{r totalevents}
+renderValueBox({
+  valueBox(
+    value = comma(sum(selectedData()$events)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Event Conversion Rate
+
+```{r totaleventConversionRate}
+renderValueBox({
+  valueBox(
+    value = percent(sum(selectedData()$events) / sum(selectedData()$sessions)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Transactions
+
+```{r totaltransactions}
+renderValueBox({
+  valueBox(
+    value = comma(sum(selectedData()$transactions)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Conversion Rate 
+
+```{r totalconversionrate}
+renderValueBox({
+  valueBox(
+    value = percent(sum(selectedData()$transactions) / sum(selectedData()$sessions)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+### Total Revenue
+
+```{r totalRevenue}
+renderValueBox({
+  valueBox(
+    value = custom_dollar_format(sum(selectedData()$revenue)),
+    icon = "fa-area-chart"
+  )
+})
+```
+
+Row {.tabset .tabset-fade data-height=1000}
+-------------------------------------
+
+### Authors
+
+```{r tbl_arth}
+selectedDataTableArth <- reactive({
+
+  req(selectedData())
+  selectedData <- selectedData()
+  
+  selectedData %>% 
+    group_by(sessionFirstArticlePublishDate, sessionFirstArticleAuthor) %>% 
+    summarise(
+      totalArticles = length(unique(sessionFirstArticleTitle)),
+      uniquePageviews = sum(uniquePageviews),
+      sessions = sum(sessions),      
+      events = sum(events),
+      eventConversionRate = sum(events) / sum(sessions),
+      transactions = sum(transactions),
+      conversionRate = sum(transactions) / sum(sessions),
+      revenue = sum(revenue) 
+    )
+  
+})
+
+DT::renderDataTable({
+  req(selectedDataTableArth())
+  selectedDataTableArth <- selectedDataTableArth()
+  
+  datatable(selectedDataTableArth,
+            colnames = c("First Article Publish Date", 
+                         "First Article Author", 
+                         "Total Articles",
+                         "Unique Pageviews", 
+                         "Sessions",
+                         "Events",
+                         "Event Conversion Rate",
+                         "Transactions",
+                         "Conversion Rate",
+                         "Revenue"),
+            rownames = FALSE,
+            filter = "top", 
+            extensions = "Buttons", 
+            options = list(dom = "Bltip",
+                           order = list(list(9, "desc")),
+                           scrollX = TRUE,
+                           scrollY = "700px",
+                           buttons = list(list(extend = "collection",
+                                               buttons = c("csv", "excel", "pdf"),
+                                               text = "Download")),
+                           pageLength = 25,
+                           lengthMenu = list(c(25, 50, 100, 500, -1), 
+                                             c("25", "50", "100", "500", "All")))) %>%
+    formatCurrency(c("revenue"), 
+                   currency = currencyFormat) %>% 
+    formatPercentage(c("eventConversionRate","conversionRate"), 2)
+})
+```
+
+### Articles
+
+```{r tbl_artT}
+selectedDataTableArtT <- reactive({
+
+  req(selectedData())
+  selectedData <- selectedData()
+  
+  selectedData %>% 
+    group_by(sessionFirstArticleTitle, sessionFirstArticleAuthor) %>% 
+    summarise(
+      uniquePageviews = sum(uniquePageviews),
+                      sessions = sum(sessions),
+                      events = sum(events),
+                      eventConversionRate = sum(events) / sum(sessions),
+                      transactions = sum(transactions),
+                      conversionRate = sum(transactions) / sum(sessions),
+                      revenue = sum(revenue)
+    )
+    
+})
+
+DT::renderDataTable({
+  req(selectedDataTableArtT())
+  selectedDataTableArtT <- selectedDataTableArtT()
+  
+  datatable(selectedDataTableArtT,
+            colnames = c("First Article", 
+              "First Article Author",
+              "Unique Pageviews",
+              "Sessions",
+              "Events",
+              "Event Conversion Rate",
+              "Transactions", 
+              "Conversion Rate", 
+              "Revenue"),
+            rownames = FALSE,
+            filter = "top", 
+            extensions = "Buttons", 
+            options = list(dom = "Bltip",
+                           order = list(list(8, "desc")),
+                           scrollX = TRUE,
+                           scrollY = "700px",
+                           buttons = list(list(extend = "collection",
+                                               buttons = c("csv", "excel", "pdf"),
+                                               text = "Download")),
+                           pageLength = 25,
+                           lengthMenu = list(c(25, 50, 100, 500, -1), 
+                                             c("25", "50", "100", "500", "All")))) %>% 
+    formatCurrency(c("revenue"), 
+                   currency = currencyFormat) %>% 
+    formatPercentage(c("eventConversionRate", "conversionRate"), 2)
+})
+```
+
+### All Traffic by Date Viewed
+
+```{r tbl_all}
+selectedDataTableAll <- reactive({
+  req(selectedData())
+  selectedData <- selectedData()
+  
+  selectedData %>% 
+    mutate(conversionRate = transactions / sessions) %>% 
+    mutate(eventConversionRate = events / sessions) %>%
+    select(date, 
+           sessionFirstArticlePublishDate,
+           sessionFirstArticleAuthor,
+           sessionFirstArticleTitle,
+           sessions,
+           uniquePageviews,
+           events,
+           eventConversionRate,
+           transactions, 
+           conversionRate,
+           revenue)
+})
+
+DT::renderDataTable({
+  req(selectedDataTableAll())
+  selectedDataTableAll <- selectedDataTableAll()
+  
+  datatable(selectedDataTableAll,
+            colnames = c("Date", 
+                         "First Article Publish Date",
+                         "First Article Author", 
+                         "First Article",
+                         "Sessions",
+                         "Unique Pageviews",
+                         "Events",
+                         "Event Conversion Rate",
+                         "Transactions",
+                         "Conversion Rate",
+                         "Revenue"),
+            rownames = FALSE, 
+            filter = "top", 
+            extensions = "Buttons", 
+            options = list(dom = "Bltip",
+                           order = list(list(10, "desc")),
+                           scrollX = TRUE,
+                           scrollY = "700px",
+                           buttons = list(list(extend = "collection",
+                                               buttons = c("csv", "excel", "pdf"),
+                                               text = "Download")),
+                           pageLength = 25,
+                           lengthMenu = list(c(25, 50, 100, 500, -1), 
+                                             c("25", "50", "100", "500", "All")))) %>% 
+    formatCurrency(c("revenue"),
+                   currency = currencyFormat) %>%
+    formatPercentage(c("eventConversionRate", "conversionRate"), 2)
+})
+```
+
+Source Data Info
+=====================================     
+
+### Available Data:
+
+**Newest Calendar Date:**  
+`r max(sourceData$date)`
+
+**Oldest Calendar Date:**  
+`r min(sourceData$date)`
+
+**Newest First Article Publish Date:**  
+`r max(sourceData$sessionFirstArticlePublishDate)`
+
+**Oldest First Article Publish Date:**  
+`r min(sourceData$sessionFirstArticlePublishDate)`
+
+### Google Analytics 360 Account Info
+
+```{r gaAccountInfo}
+# DT::renderDataTable({
+#   datatable(ga_account_info,
+#             rownames = FALSE,
+#             extensions = "Buttons", 
+#             options = list(
+#               dom = "t")
+#             )
+# })
+```
+
+About This Report
+=====================================     
+
+### Overview  {data-height=200}
+
+This report combines session and hit-level custom dimension data and allows filtering by calendar date range and the first date an article was published.
+
+The source data of this report is exported from Google Analytics daily at 0400 EST.  
+
+Please see the [Source Data Info](#section-source-data-info) tab for full details of the data available.
+
+### How to Use {data-height=200}
+
+1. Select calendar date range
+2. Select article publish date 
+3. Select a metric to display in the daily time series chart from the "Show in Daily Totals Chart" dropdown 
+4. Gain insights! 
+5. Use the "Download button at top of "All" table to export data currently visible
+
+### Source Code {data-height=100}
+
+- GitHub Repository [repo-name](https://github.com/empirical-path/)
+
+Get Help
+=====================================     
+
+#### Email Us:
+
+- **Developer Support:** [Justin Marciszewski](mailto:justin@empiricalpath.com)
+- **General Support:** [google.cloud@empiricalpath.com](mailto:google.cloud@empiricalpath.com)
+
