@@ -5,8 +5,8 @@
 # index.Rmd
 ## load source data
 sourceData <- switch(paramViewId,
-                     "demo" = readRDS("../../data/viewId_demo.rds"), 
-                     "123456" = readRDS("../../data/viewId_123456.rds"))
+                     "demo" = readRDS("../data/viewId_demo.rds"), 
+                     "123456" = readRDS("../data/viewId_123456.rds"))
 
 library(scales)
 
