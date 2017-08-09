@@ -1,4 +1,4 @@
-FROM gcr.io/ep-prod/github-empirical-path-gce-rshiny
+FROM rocker/shiny
 MAINTAINER Justin Marciszewski (justin@empiricalpath.com)
 
 # install R package dependencies
@@ -17,7 +17,9 @@ RUN apt-get update && apt-get install -y \
 RUN install2.r --error \
 	## from CRAN
 	-r 'http://cran.us.r-project.org' \
-	tidyr \
+	dplyr scales lubridate xts \
+	googleAuthR googleCloudStorageR \
+	flexdashboard dygraphs DT \
 	## from github
 	# && Rscript -e 'devtools::install_github("")' \
 	## clean up
