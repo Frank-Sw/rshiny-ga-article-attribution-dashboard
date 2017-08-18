@@ -2,7 +2,7 @@
 output: 
   flexdashboard::flex_dashboard:
     theme: lumen
-    favicon: favicon_demo.png
+    favicon: ep-tab-logo.png
     vertical_layout: scroll
 runtime: shiny
 ---
@@ -60,7 +60,7 @@ currencyFormat <- switch(paramViewId,
 
 # set logo url for inputs sidebar
 logo_url <- switch(paramViewId,
-                  "demo" = "logo_demo.png",
+                  "demo" = "ep-tab-logo-med.png",
                    "123456" = "logo_2.png")
 
                    
