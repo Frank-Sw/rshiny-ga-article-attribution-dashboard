@@ -45,9 +45,9 @@ favicon_url <- switch(paramViewId,
                       "123456" = "favicon_2.png")
 
 # load GA account info
-# ga_account_info <- switch(paramViewId,
-#                           "demo" = readRDS("../../data/gaAccountInfo_demo.rds"),
-#                           "123456" = readRDS("../../data/gaAccountInfo_123456.rds"))
+ga_account_info <- switch(paramViewId,
+                          "demo" = readRDS("../data/gaAccountInfo_demo.rds"),
+                          "123456" = readRDS("../data/gaAccountInfo_123456.rds"))
 
 # set custom dollar format for value box
 custom_dollar_format <- switch(paramViewId,
@@ -508,6 +508,19 @@ The source data of this report is exported from Google Analytics daily at 0400 E
 
 **Oldest First Article Publish Date:**  
 `r min(sourceData$sessionFirstArticlePublishDate)`
+
+### Google Analytics Account Info
+
+```{r gaAccountInfo}
+DT::renderDataTable({
+  datatable(ga_account_info,
+            rownames = FALSE,
+            extensions = "Buttons",
+            options = list(
+              dom = "t")
+            )
+})
+```
 
 ### How to Use {data-height=200}
 
