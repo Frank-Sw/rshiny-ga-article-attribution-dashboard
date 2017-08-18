@@ -146,16 +146,15 @@ observe({
 })
 ```
 
+### Visit Us
+
+- [empiricalpath.com](https://www.empiricalpath.com/?utm_source=google-cloud-platform&utm_medium=rshiny)
+- [github.com/empirical-path](https://github.com/empirical-path)
+
 ### Say Hello
 
 - [Send us an email](mailto:google.cloud@empiricalpath.com)
 - [Tweet Us](https://twitter.com/empiricalpath)
-
-### See What We're Up to
-
-- [github.com/empirical-path](https://github.com/empirical-path)
-- [empiricalpath.com](https://www.empiricalpath.com/?utm_source=google-cloud-platform&utm_medium=rshiny)
-
 
 ```{r selectedData}
 selectedData <- reactive({
