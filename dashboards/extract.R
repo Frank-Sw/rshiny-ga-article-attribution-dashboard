@@ -9,9 +9,15 @@ options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/cloud-p
 ## auth on the VM
 gar_gce_auth()
 
-### get auth file from GCS
+### get files from GCS
 file <- "data/viewId_demo.rds"
 
 gcs_get_object(object_name = file,
                saveToDisk = file,
+               overwrite = TRUE)
+
+file2 <- "data/gaAccountInfo_demo.rds"
+
+gcs_get_object(object_name = file2,
+               saveToDisk = file2,
                overwrite = TRUE)
