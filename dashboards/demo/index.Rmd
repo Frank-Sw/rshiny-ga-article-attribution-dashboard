@@ -35,8 +35,8 @@ library(scales)
 
 ## set report title
 report_title <- switch(paramViewId,
-                       "demo" = "Article Attribution Report - Example Website 1",
-                       "123456" = "Article Attribution Report - Example Website 2")
+                       "demo" = "Article Attribution Dashboard - Example Website 1",
+                       "123456" = "Article Attribution Dashboard - Example Website 2")
 
 ## set report favicon
 favicon_url <- switch(paramViewId,
