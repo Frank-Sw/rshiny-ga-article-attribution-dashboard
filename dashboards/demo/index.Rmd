@@ -17,6 +17,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 ```{r global}
+message(getwd())
 #' SET MASTER PARAMETER
 #' @param paramViewId a character string of the GA view
 #' 
@@ -62,9 +63,6 @@ currencyFormat <- switch(paramViewId,
 logo_url <- switch(paramViewId,
                   "demo" = "ep-tab-logo-med.png",
                    "123456" = "logo_2.png")
-
-                   
-
 ## load packages
 library(flexdashboard)
 library(lubridate)
@@ -72,6 +70,8 @@ library(dplyr)
 library(dygraphs)
 library(xts)
 library(DT)
+
+source("../extract.R")
 
 ## load source data
 sourceData <- switch(paramViewId,
