@@ -71,8 +71,6 @@ library(dygraphs)
 library(xts)
 library(DT)
 
-source("../extract.R")
-
 ## load source data
 sourceData <- switch(paramViewId,
                      "demo" = readRDS("../data/viewId_demo.rds"), 
