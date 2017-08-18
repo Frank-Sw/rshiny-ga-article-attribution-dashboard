@@ -87,7 +87,7 @@ sourceData <- sourceData[complete.cases(sourceData),]
 title: `r report_title`
 ---
 
-Summary {data-orientation=rows}
+Summary {data-orientation=rows data-icon="fa-tachometer"}
 =====================================  
 
 Inputs {.sidebar}
@@ -146,6 +146,17 @@ observe({
 })
 ```
 
+### Say Hello
+
+- [Send us an email](mailto:google.cloud@empiricalpath.com)
+- [Tweet Us](https://twitter.com/empiricalpath)
+
+### See What We're Up to
+
+- [github.com/empirical-path](https://github.com/empirical-path)
+- [empiricalpath.com](https://www.empiricalpath.com/?utm_source=google-cloud-platform&utm_medium=rshiny)
+
+
 ```{r selectedData}
 selectedData <- reactive({
   req(input$gaDate)
@@ -190,8 +201,6 @@ dailyTotalData <- reactive({
 
 })
 ```
-
-![](`r logo_url`)
 
 Row 
 -----------------------------------------------------------------------
@@ -480,8 +489,14 @@ DT::renderDataTable({
 })
 ```
 
-Source Data Info
+About This Report {data-icon="fa-info"}
 =====================================     
+
+### Overview  {data-height=200}
+
+This report combines session and hit-level custom dimension data and allows filtering by calendar date range and the first date an article was published.
+
+The source data of this report is exported from Google Analytics daily at 0400 EST.  
 
 ### Available Data:
 
@@ -497,30 +512,6 @@ Source Data Info
 **Oldest First Article Publish Date:**  
 `r min(sourceData$sessionFirstArticlePublishDate)`
 
-### Google Analytics 360 Account Info
-
-```{r gaAccountInfo}
-# DT::renderDataTable({
-#   datatable(ga_account_info,
-#             rownames = FALSE,
-#             extensions = "Buttons", 
-#             options = list(
-#               dom = "t")
-#             )
-# })
-```
-
-About This Report
-=====================================     
-
-### Overview  {data-height=200}
-
-This report combines session and hit-level custom dimension data and allows filtering by calendar date range and the first date an article was published.
-
-The source data of this report is exported from Google Analytics daily at 0400 EST.  
-
-Please see the [Source Data Info](#section-source-data-info) tab for full details of the data available.
-
 ### How to Use {data-height=200}
 
 1. Select calendar date range
@@ -529,15 +520,14 @@ Please see the [Source Data Info](#section-source-data-info) tab for full detail
 4. Gain insights! 
 5. Use the "Download button at top of "All" table to export data currently visible
 
-### Source Code {data-height=100}
+### Source Code {data-height=100 data-icon="fa-code-fork"}
 
 - GitHub Repository [repo-name](https://github.com/empirical-path/)
 
-Get Help
+Contact Us {data-icon="fa-envelope"}
 =====================================     
 
 #### Email Us:
 
-- **Developer Support:** [Justin Marciszewski](mailto:justin@empiricalpath.com)
 - **General Support:** [google.cloud@empiricalpath.com](mailto:google.cloud@empiricalpath.com)
-
+- **Developer Support:** [Justin Marciszewski](mailto:google.cloud@empiricalpath.com)
