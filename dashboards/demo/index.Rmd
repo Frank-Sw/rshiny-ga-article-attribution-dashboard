@@ -24,13 +24,12 @@ message(getwd())
 paramViewId <- "demo" # demo
 
 #' LOAD REMAINING PARAMETERS
-#' @param filepath
-#' 
-#' @return sourceData
-#' @return report_title
-#' @return favicon_url
-#' 
-# source("../config.R")
+#' @param report_title
+#' @param favicon_url
+#' @param sourceData
+#' @param custom_dollar_format
+#' @param currencyFormat
+#' @param logo_url
 
 library(scales)
 
