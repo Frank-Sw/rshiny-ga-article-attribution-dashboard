@@ -153,10 +153,10 @@ selected_data <- reactive({
   req(input$sessionFirstArticlePublishDate)
   
   ga_data %>%  
-    dplyr::filter(date >= input$gaDate[1]) %>% 
-    dplyr::filter(date <= input$gaDate[2]) %>% 
-    dplyr::filter(sessionFirstArticlePublishDate >= input$sessionFirstArticlePublishDate[1]) %>% 
-    dplyr::filter(sessionFirstArticlePublishDate <= input$sessionFirstArticlePublishDate[2])
+    filter(date >= input$gaDate[1]) %>% 
+    filter(date <= input$gaDate[2]) %>% 
+    filter(sessionFirstArticlePublishDate >= input$sessionFirstArticlePublishDate[1]) %>% 
+    filter(sessionFirstArticlePublishDate <= input$sessionFirstArticlePublishDate[2])
   
 })
 
@@ -167,12 +167,12 @@ dailyTotalData <- reactive({
   
   ## transform data
   dt_ta <- selected_data() %>% 
-    dplyr::group_by(sessionFirstArticlePublishDate) %>% 
-    dplyr::summarise(articles = n_distinct(sessionFirstArticleTitle))
+    group_by(sessionFirstArticlePublishDate) %>% 
+    summarise(articles = n_distinct(sessionFirstArticleTitle))
   
   dt_sm <- selected_data() %>% 
-    dplyr::group_by(date) %>% 
-    dplyr::summarise(uniquePageviews = sum(uniquePageviews),
+    group_by(date) %>% 
+    summarise(uniquePageviews = sum(uniquePageviews),
                      sessions = sum(sessions),      
                      events = sum(events),
                      eventConversionRate = sum(events) / sum(sessions), 
