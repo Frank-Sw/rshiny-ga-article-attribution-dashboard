@@ -17,6 +17,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 ```{r global}
+# print working directory for easier debugging/sanity
+# via console when knitting remotely (or locally)
+message(getwd()) 
 #' SET MASTER PARAMETER
 #' @param paramViewId a character string of the GA view
 #' 
@@ -24,9 +27,6 @@ paramViewId <- "demo" # demo
 
 # load package for custom_dollar_format
 library(scales)
-
-# print working directory for easier debugging
-message(getwd())
 
 ## set report title
 report_title <- switch(paramViewId,
@@ -38,17 +38,17 @@ favicon_url <- switch(paramViewId,
                       "demo" = "favicon_demo.png",
                       "123456" = "favicon_2.png")
 
-# set custom dollar format for value box
+## set custom dollar format for value box
 custom_dollar_format <- switch(paramViewId,
                                "demo" = dollar_format(prefix = "$"),
                                "123456" = dollar_format(prefix = "$"))
 
-# set custom dollar format for tables
+## set custom dollar format for tables
 currencyFormat <- switch(paramViewId,
                          "demo" = "$",
                          "123456" = "$")
 
-# set logo url for inputs sidebar
+## set logo url for inputs sidebar
 logo_url <- switch(paramViewId,
                    "demo" = "ep-tab-logo-med.png",
                    "123456" = "logo_2.png")
@@ -121,14 +121,12 @@ selectInput(inputId = "daily_totals_metric",
                         "Event Conversion Rate" = "eventConversionRate",
                         "Transactions" = "transactions",
                         "Conversion Rate" = "conversionRate",
-                        "Revenue" = "revenue")
-            )
+                        "Revenue" = "revenue"))
 
-# scan for url parameters on calendar date range or gaDate input
+## scan for url parameters on gaDate input
+## so users can share links to filtered view of dashboard
 observe({
-      
       query <- parseQueryString(session$clientData$url_search)
-      
       if (!is.null(query)) {
         updateDateRangeInput(session, 
                              "gaDate",
@@ -150,6 +148,7 @@ observe({
 
 ```{r selected_data}
 selected_data <- reactive({
+  
   req(input$gaDate)
   req(input$sessionFirstArticlePublishDate)
   
@@ -166,24 +165,20 @@ dailyTotalData <- reactive({
   req(selected_data())
   req(input$daily_totals_metric)
   
-  selected_data <- selected_data()
-  
   ## transform data
-  dt_ta <- selected_data %>% 
+  dt_ta <- selected_data() %>% 
     dplyr::group_by(sessionFirstArticlePublishDate) %>% 
     dplyr::summarise(articles = n_distinct(sessionFirstArticleTitle))
   
-  dt_sm <- selected_data %>% 
+  dt_sm <- selected_data() %>% 
     dplyr::group_by(date) %>% 
-    dplyr::summarise(
-      uniquePageviews = sum(uniquePageviews),
-      sessions = sum(sessions),      
-      events = sum(events),
-      eventConversionRate = sum(events) / sum(sessions), 
-      transactions = sum(transactions),
-      conversionRate = sum(transactions) / sum(sessions),
-      revenue = sum(revenue)
-    )
+    dplyr::summarise(uniquePageviews = sum(uniquePageviews),
+                     sessions = sum(sessions),      
+                     events = sum(events),
+                     eventConversionRate = sum(events) / sum(sessions), 
+                     transactions = sum(transactions),
+                     conversionRate = sum(transactions) / sum(sessions),
+                     revenue = sum(revenue))
   
   total_data <- left_join(dt_sm, dt_ta, by = c(date = "sessionFirstArticlePublishDate"))
   
@@ -200,19 +195,15 @@ Row
 
 ```{r dailyTotalsPlot}
 renderDygraph({
+  
   req(dailyTotalData())
   
-  ts_data <- dailyTotalData()
-  
-    d <- dygraph(ts_data, 
-                 main = paste("Total ", input$daily_totals_metric, " by Day", sep = "") ) %>%
-      dySeries(input$daily_totals_metric, 
-               drawPoints = TRUE, 
-               label = input$daily_totals_metric) %>%
-      dyHighlight(highlightCircleSize = 5)    
-    
-    d
-
+  dygraph(dailyTotalData(), 
+          main = paste("Total ", input$daily_totals_metric, " by Day", sep = "") ) %>%
+    dySeries(input$daily_totals_metric, 
+             drawPoints = TRUE, 
+             label = input$daily_totals_metric) %>%
+    dyHighlight(highlightCircleSize = 5)
   })
 ```
 
@@ -223,10 +214,8 @@ Row
 
 ```{r totalArticles}
 renderValueBox({
-  valueBox(
-    value = comma(length(unique(selected_data()$sessionFirstArticleTitle))),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = comma(length(unique(selected_data()$sessionFirstArticleTitle))),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -234,10 +223,8 @@ renderValueBox({
 
 ```{r totalUniquePageviews}
 renderValueBox({
-  valueBox(
-    value = comma(sum(selected_data()$uniquePageviews)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = comma(sum(selected_data()$uniquePageviews)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -245,10 +232,8 @@ renderValueBox({
 
 ```{r totalSessions}
 renderValueBox({
-  valueBox(
-    value = comma(sum(selected_data()$sessions)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = comma(sum(selected_data()$sessions)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -256,10 +241,8 @@ renderValueBox({
 
 ```{r totalevents}
 renderValueBox({
-  valueBox(
-    value = comma(sum(selected_data()$events)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = comma(sum(selected_data()$events)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -267,10 +250,8 @@ renderValueBox({
 
 ```{r totaleventConversionRate}
 renderValueBox({
-  valueBox(
-    value = percent(sum(selected_data()$events) / sum(selected_data()$sessions)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = percent(sum(selected_data()$events) / sum(selected_data()$sessions)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -278,10 +259,8 @@ renderValueBox({
 
 ```{r totaltransactions}
 renderValueBox({
-  valueBox(
-    value = comma(sum(selected_data()$transactions)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = comma(sum(selected_data()$transactions)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -289,10 +268,8 @@ renderValueBox({
 
 ```{r totalconversionrate}
 renderValueBox({
-  valueBox(
-    value = percent(sum(selected_data()$transactions) / sum(selected_data()$sessions)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = percent(sum(selected_data()$transactions) / sum(selected_data()$sessions)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -300,10 +277,8 @@ renderValueBox({
 
 ```{r totalRevenue}
 renderValueBox({
-  valueBox(
-    value = custom_dollar_format(sum(selected_data()$revenue)),
-    icon = "fa-area-chart"
-  )
+  valueBox(value = custom_dollar_format(sum(selected_data()$revenue)),
+           icon = "fa-area-chart")
 })
 ```
 
@@ -320,20 +295,18 @@ selected_dataTableArth <- reactive({
   
   selected_data %>% 
     group_by(sessionFirstArticlePublishDate, sessionFirstArticleAuthor) %>% 
-    summarise(
-      totalArticles = length(unique(sessionFirstArticleTitle)),
-      uniquePageviews = sum(uniquePageviews),
-      sessions = sum(sessions),      
-      events = sum(events),
-      eventConversionRate = sum(events) / sum(sessions),
-      transactions = sum(transactions),
-      conversionRate = sum(transactions) / sum(sessions),
-      revenue = sum(revenue) 
-    )
-  
+    summarise(totalArticles = length(unique(sessionFirstArticleTitle)),
+              uniquePageviews = sum(uniquePageviews),
+              sessions = sum(sessions),      
+              events = sum(events),
+              eventConversionRate = sum(events) / sum(sessions),
+              transactions = sum(transactions),
+              conversionRate = sum(transactions) / sum(sessions),
+              revenue = sum(revenue))
 })
 
 DT::renderDataTable({
+  
   req(selected_dataTableArth())
   selected_dataTableArth <- selected_dataTableArth()
   
@@ -377,19 +350,17 @@ selected_dataTableArtT <- reactive({
   
   selected_data %>% 
     group_by(sessionFirstArticleTitle, sessionFirstArticleAuthor) %>% 
-    summarise(
-      uniquePageviews = sum(uniquePageviews),
-                      sessions = sum(sessions),
-                      events = sum(events),
-                      eventConversionRate = sum(events) / sum(sessions),
-                      transactions = sum(transactions),
-                      conversionRate = sum(transactions) / sum(sessions),
-                      revenue = sum(revenue)
-    )
-    
+    summarise(uniquePageviews = sum(uniquePageviews),
+              sessions = sum(sessions),
+              events = sum(events),
+              eventConversionRate = sum(events) / sum(sessions),
+              transactions = sum(transactions),
+              conversionRate = sum(transactions) / sum(sessions),
+              revenue = sum(revenue))
 })
 
 DT::renderDataTable({
+  
   req(selected_dataTableArtT())
   selected_dataTableArtT <- selected_dataTableArtT()
   
@@ -426,6 +397,7 @@ DT::renderDataTable({
 
 ```{r tbl_all}
 selected_dataTableAll <- reactive({
+  
   req(selected_data())
   selected_data <- selected_data()
   
@@ -446,6 +418,7 @@ selected_dataTableAll <- reactive({
 })
 
 DT::renderDataTable({
+  
   req(selected_dataTableAll())
   selected_dataTableAll <- selected_dataTableAll()
   
@@ -511,8 +484,7 @@ DT::renderDataTable({
             rownames = FALSE,
             extensions = "Buttons",
             options = list(
-              dom = "t")
-            )
+              dom = "t"))
 })
 ```
 
