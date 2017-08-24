@@ -17,21 +17,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 ```{r global}
-message(getwd())
 #' SET MASTER PARAMETER
 #' @param paramViewId a character string of the GA view
 #' 
 paramViewId <- "demo" # demo
 
-#' LOAD REMAINING PARAMETERS
-#' @param report_title
-#' @param favicon_url
-#' @param sourceData
-#' @param custom_dollar_format
-#' @param currencyFormat
-#' @param logo_url
-
+# load package for custom_dollar_format
 library(scales)
+
+# print working directory for easier debugging
+message(getwd())
 
 ## set report title
 report_title <- switch(paramViewId,
@@ -42,11 +37,6 @@ report_title <- switch(paramViewId,
 favicon_url <- switch(paramViewId,
                       "demo" = "favicon_demo.png",
                       "123456" = "favicon_2.png")
-
-# load GA account info
-ga_account_info <- switch(paramViewId,
-                          "demo" = readRDS("../data/gaAccountInfo_demo.rds"),
-                          "123456" = readRDS("../data/gaAccountInfo_123456.rds"))
 
 # set custom dollar format for value box
 custom_dollar_format <- switch(paramViewId,
@@ -60,7 +50,7 @@ currencyFormat <- switch(paramViewId,
 
 # set logo url for inputs sidebar
 logo_url <- switch(paramViewId,
-                  "demo" = "ep-tab-logo-med.png",
+                   "demo" = "ep-tab-logo-med.png",
                    "123456" = "logo_2.png")
 ## load packages
 library(flexdashboard)
@@ -71,13 +61,36 @@ library(xts)
 library(DT)
 
 ## load source data
-sourceData <- switch(paramViewId,
-                     "demo" = readRDS("../data/viewId_demo.rds"), 
-                     "123456" = readRDS("../data/viewId_123456.rds"))
+#' Check GA Data
+#' A function to check if data exists in the directory
+#' If not, it downloads from GCS
+#' @param ga_data_file STRING of file path
+#' 
+#' @return
+check_ga_data <- function(ga_data_file) {
+  message(sprintf("[-] checking if %s exists...", source_data_file))
+  if(!file.exists(ga_data_file)){
+    message("[!] no data exists!")
+    message("[?] downloading from GCS...")
+    source("../extract.R")
+  } else {
+    message("[!] yes we have data!")
+  }
+}
+check_ga_data(ga_data_file = "../data/viewId_demo.rds")
+
+### GA account info for info tab
+ga_account_info <- switch(paramViewId,
+                          "demo" = readRDS("../data/gaAccountInfo_demo.rds"),
+                          "123456" = readRDS("../data/gaAccountInfo_123456.rds"))
+### GA data for summary tab
+ga_data <- switch(paramViewId,
+                  "demo" = readRDS("../data/viewId_demo.rds"),
+                  "123456" = readRDS("../data/viewId_123456.rds"))
 
 # keep complete cases only/remove any rows with NA to prevent Shiny load errors
 # http://stackoverflow.com/questions/4862178/remove-rows-with-nas-missing-values-in-data-frame
-sourceData <- sourceData[complete.cases(sourceData),]
+ga_data <- ga_data[complete.cases(ga_data),]
 ```
 
 ---
@@ -93,10 +106,10 @@ Inputs {.sidebar}
 ```{r inputs}
 dateRangeInput(inputId = "gaDate", 
                label = "Calendar Date Range:", 
-               start = max(sourceData$date)-30, 
-               end = max(sourceData$date)-1, 
-               min = min(sourceData$date), 
-               max = max(sourceData$date), 
+               start = max(ga_data$date)-30, 
+               end = max(ga_data$date)-1, 
+               min = min(ga_data$date), 
+               max = max(ga_data$date), 
                format = "M d, yyyy", 
                startview = "month", 
                weekstart = 0,
@@ -106,10 +119,10 @@ dateRangeInput(inputId = "gaDate",
 
 dateRangeInput(inputId = "sessionFirstArticlePublishDate", 
                label = "First Article Publish Date Range:", 
-               start = min(sourceData$sessionFirstArticlePublishDate), 
-               end = max(sourceData$sessionFirstArticlePublishDate),
-               min = min(sourceData$sessionFirstArticlePublishDate),
-               max = max(sourceData$sessionFirstArticlePublishDate), 
+               start = min(ga_data$sessionFirstArticlePublishDate), 
+               end = max(ga_data$sessionFirstArticlePublishDate),
+               min = min(ga_data$sessionFirstArticlePublishDate),
+               max = max(ga_data$sessionFirstArticlePublishDate), 
                format = "M d, yyyy", 
                startview = "month", 
                weekstart = 0,
@@ -153,12 +166,12 @@ observe({
 - [Send us an email](mailto:google.cloud@empiricalpath.com)
 - [Tweet Us](https://twitter.com/empiricalpath)
 
-```{r selectedData}
-selectedData <- reactive({
+```{r selected_data}
+selected_data <- reactive({
   req(input$gaDate)
   req(input$sessionFirstArticlePublishDate)
   
-  sourceData %>%  
+  ga_data %>%  
     dplyr::filter(date >= input$gaDate[1]) %>% 
     dplyr::filter(date <= input$gaDate[2]) %>% 
     dplyr::filter(sessionFirstArticlePublishDate >= input$sessionFirstArticlePublishDate[1]) %>% 
@@ -168,17 +181,17 @@ selectedData <- reactive({
 
 dailyTotalData <- reactive({
   
-  req(selectedData())
+  req(selected_data())
   req(input$daily_totals_metric)
   
-  selectedData <- selectedData()
+  selected_data <- selected_data()
   
   ## transform data
-  dt_ta <- selectedData %>% 
+  dt_ta <- selected_data %>% 
     dplyr::group_by(sessionFirstArticlePublishDate) %>% 
     dplyr::summarise(articles = n_distinct(sessionFirstArticleTitle))
   
-  dt_sm <- selectedData %>% 
+  dt_sm <- selected_data %>% 
     dplyr::group_by(date) %>% 
     dplyr::summarise(
       uniquePageviews = sum(uniquePageviews),
@@ -229,7 +242,7 @@ Row
 ```{r totalArticles}
 renderValueBox({
   valueBox(
-    value = comma(length(unique(selectedData()$sessionFirstArticleTitle))),
+    value = comma(length(unique(selected_data()$sessionFirstArticleTitle))),
     icon = "fa-area-chart"
   )
 })
@@ -240,7 +253,7 @@ renderValueBox({
 ```{r totalUniquePageviews}
 renderValueBox({
   valueBox(
-    value = comma(sum(selectedData()$uniquePageviews)),
+    value = comma(sum(selected_data()$uniquePageviews)),
     icon = "fa-area-chart"
   )
 })
@@ -251,7 +264,7 @@ renderValueBox({
 ```{r totalSessions}
 renderValueBox({
   valueBox(
-    value = comma(sum(selectedData()$sessions)),
+    value = comma(sum(selected_data()$sessions)),
     icon = "fa-area-chart"
   )
 })
@@ -262,7 +275,7 @@ renderValueBox({
 ```{r totalevents}
 renderValueBox({
   valueBox(
-    value = comma(sum(selectedData()$events)),
+    value = comma(sum(selected_data()$events)),
     icon = "fa-area-chart"
   )
 })
@@ -273,7 +286,7 @@ renderValueBox({
 ```{r totaleventConversionRate}
 renderValueBox({
   valueBox(
-    value = percent(sum(selectedData()$events) / sum(selectedData()$sessions)),
+    value = percent(sum(selected_data()$events) / sum(selected_data()$sessions)),
     icon = "fa-area-chart"
   )
 })
@@ -284,7 +297,7 @@ renderValueBox({
 ```{r totaltransactions}
 renderValueBox({
   valueBox(
-    value = comma(sum(selectedData()$transactions)),
+    value = comma(sum(selected_data()$transactions)),
     icon = "fa-area-chart"
   )
 })
@@ -295,7 +308,7 @@ renderValueBox({
 ```{r totalconversionrate}
 renderValueBox({
   valueBox(
-    value = percent(sum(selectedData()$transactions) / sum(selectedData()$sessions)),
+    value = percent(sum(selected_data()$transactions) / sum(selected_data()$sessions)),
     icon = "fa-area-chart"
   )
 })
@@ -306,7 +319,7 @@ renderValueBox({
 ```{r totalRevenue}
 renderValueBox({
   valueBox(
-    value = custom_dollar_format(sum(selectedData()$revenue)),
+    value = custom_dollar_format(sum(selected_data()$revenue)),
     icon = "fa-area-chart"
   )
 })
@@ -318,12 +331,12 @@ Row {.tabset .tabset-fade data-height=1000}
 ### Authors
 
 ```{r tbl_arth}
-selectedDataTableArth <- reactive({
+selected_dataTableArth <- reactive({
 
-  req(selectedData())
-  selectedData <- selectedData()
+  req(selected_data())
+  selected_data <- selected_data()
   
-  selectedData %>% 
+  selected_data %>% 
     group_by(sessionFirstArticlePublishDate, sessionFirstArticleAuthor) %>% 
     summarise(
       totalArticles = length(unique(sessionFirstArticleTitle)),
@@ -339,10 +352,10 @@ selectedDataTableArth <- reactive({
 })
 
 DT::renderDataTable({
-  req(selectedDataTableArth())
-  selectedDataTableArth <- selectedDataTableArth()
+  req(selected_dataTableArth())
+  selected_dataTableArth <- selected_dataTableArth()
   
-  datatable(selectedDataTableArth,
+  datatable(selected_dataTableArth,
             colnames = c("First Article Publish Date", 
                          "First Article Author", 
                          "Total Articles",
@@ -375,12 +388,12 @@ DT::renderDataTable({
 ### Articles
 
 ```{r tbl_artT}
-selectedDataTableArtT <- reactive({
+selected_dataTableArtT <- reactive({
 
-  req(selectedData())
-  selectedData <- selectedData()
+  req(selected_data())
+  selected_data <- selected_data()
   
-  selectedData %>% 
+  selected_data %>% 
     group_by(sessionFirstArticleTitle, sessionFirstArticleAuthor) %>% 
     summarise(
       uniquePageviews = sum(uniquePageviews),
@@ -395,19 +408,19 @@ selectedDataTableArtT <- reactive({
 })
 
 DT::renderDataTable({
-  req(selectedDataTableArtT())
-  selectedDataTableArtT <- selectedDataTableArtT()
+  req(selected_dataTableArtT())
+  selected_dataTableArtT <- selected_dataTableArtT()
   
-  datatable(selectedDataTableArtT,
+  datatable(selected_dataTableArtT,
             colnames = c("First Article", 
-              "First Article Author",
-              "Unique Pageviews",
-              "Sessions",
-              "Events",
-              "Event Conversion Rate",
-              "Transactions", 
-              "Conversion Rate", 
-              "Revenue"),
+                         "First Article Author",
+                         "Unique Pageviews",
+                         "Sessions",
+                         "Events",
+                         "Event Conversion Rate",
+                         "Transactions", 
+                         "Conversion Rate", 
+                         "Revenue"),
             rownames = FALSE,
             filter = "top", 
             extensions = "Buttons", 
@@ -430,11 +443,11 @@ DT::renderDataTable({
 ### All Traffic by Date Viewed
 
 ```{r tbl_all}
-selectedDataTableAll <- reactive({
-  req(selectedData())
-  selectedData <- selectedData()
+selected_dataTableAll <- reactive({
+  req(selected_data())
+  selected_data <- selected_data()
   
-  selectedData %>% 
+  selected_data %>% 
     mutate(conversionRate = transactions / sessions) %>% 
     mutate(eventConversionRate = events / sessions) %>%
     select(date, 
@@ -451,10 +464,10 @@ selectedDataTableAll <- reactive({
 })
 
 DT::renderDataTable({
-  req(selectedDataTableAll())
-  selectedDataTableAll <- selectedDataTableAll()
+  req(selected_dataTableAll())
+  selected_dataTableAll <- selected_dataTableAll()
   
-  datatable(selectedDataTableAll,
+  datatable(selected_dataTableAll,
             colnames = c("Date", 
                          "First Article Publish Date",
                          "First Article Author", 
@@ -497,16 +510,16 @@ The source data of this report is exported from Google Analytics daily at 0400 E
 ### Available Data:
 
 **Newest Calendar Date:**  
-`r max(sourceData$date)`
+`r max(ga_data$date)`
 
 **Oldest Calendar Date:**  
-`r min(sourceData$date)`
+`r min(ga_data$date)`
 
 **Newest First Article Publish Date:**  
-`r max(sourceData$sessionFirstArticlePublishDate)`
+`r max(ga_data$sessionFirstArticlePublishDate)`
 
 **Oldest First Article Publish Date:**  
-`r min(sourceData$sessionFirstArticlePublishDate)`
+`r min(ga_data$sessionFirstArticlePublishDate)`
 
 ### Google Analytics Account Info
 
