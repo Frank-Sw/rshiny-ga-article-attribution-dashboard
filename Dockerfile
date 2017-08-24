@@ -27,6 +27,3 @@ RUN install2.r --error \
 
 ## copy shiny app directory
 COPY ./dashboards/ /srv/shiny-server/dashboards
-
-## run extract script 
-# RUN cd /srv/shiny-server/dashboards; Rscript extract.R
