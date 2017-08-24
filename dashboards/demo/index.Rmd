@@ -61,24 +61,6 @@ library(xts)
 library(DT)
 
 ## load source data
-#' Check GA Data
-#' A function to check if data exists in the directory
-#' If not, it downloads from GCS
-#' @param ga_data_file STRING of file path
-#' 
-#' @return
-check_ga_data <- function(ga_data_file) {
-  message(sprintf("[-] checking if %s exists...", source_data_file))
-  if(!file.exists(ga_data_file)){
-    message("[!] no data exists!")
-    message("[?] downloading from GCS...")
-    source("../extract.R")
-  } else {
-    message("[!] yes we have data!")
-  }
-}
-check_ga_data(ga_data_file = "../data/viewId_demo.rds")
-
 ### GA account info for info tab
 ga_account_info <- switch(paramViewId,
                           "demo" = readRDS("../data/gaAccountInfo_demo.rds"),
