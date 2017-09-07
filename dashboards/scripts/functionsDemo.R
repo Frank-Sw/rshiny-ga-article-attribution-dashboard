@@ -76,8 +76,6 @@ choose_ga_auth <- function() {
     message("[?] YES, in the cloud on a GCE VM!")
     
     message("[?] using VM's default creds for authentication...")
-    gar_gce_auth()
-    
   }
 }
 

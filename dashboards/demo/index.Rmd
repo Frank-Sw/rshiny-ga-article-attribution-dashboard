@@ -18,6 +18,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 ```{r global}
+## print working directory for easier debugging/sanity
+message(getwd()) 
+
 ###############################################################################
 # [START - DEMO ONLY] 
 #' Remove this code when replicating this demo
@@ -29,9 +32,6 @@ source("../scripts/functionsDemo.R") ## REMOVE, FOR DEMO PURPOSES ONLY
 fetch_demo_data(paramViewId = "demo") ## REMOVE, FOR DEMO PURPOSES ONLY 
 # [END - DEMO ONLY] 
 ###############################################################################
-
-## print working directory for easier debugging/sanity
-message(getwd()) 
 
 #' Set Master Parameter of GA View ID
 #' @param paramViewId a character string of the GA view
