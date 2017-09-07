@@ -63,7 +63,7 @@ vm <- setup_vm(gce_vm_name = gce_vm_name,
 #### cd /var/log/shiny-server; tail -f *log
 
 ## DELETE INSTANCE 
-job_delete <- gce_vm_delete(vm)
-gce_wait(job_delete, wait = 20)
-inst <- gce_get_instance(vm)
-inst$status
+# job_delete <- gce_vm_delete(vm)
+# gce_wait(job_delete, wait = 20)
+# inst <- gce_get_instance(vm)
+# inst$status
