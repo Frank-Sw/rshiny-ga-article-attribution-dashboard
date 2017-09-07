@@ -4,7 +4,7 @@ library(googleAuthR)
 library(googleCloudStorageR)
 
 ## set options
-gcs_global_bucket("rshiny-ga-article-dash")
+gcs_global_bucket("rshiny-ga-article-attribution-dashboard")
 options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/cloud-platform"))
 
 ## functions 
