@@ -4,6 +4,7 @@ output:
     theme: lumen
     favicon: ep-tab-logo.png
     vertical_layout: scroll
+    source_code: https://github.com/empirical-path/rshiny-ga-article-attribution-dashboard
 runtime: shiny
 ---
 
@@ -148,13 +149,12 @@ observe({
 - [Send us an email](mailto:google.cloud@empiricalpath.com)
 - [Tweet Us](https://twitter.com/empiricalpath)
 
-### Resources
+### R Packages
 
 - [googleAuthR](http://code.markedmondson.me/googleAuthR/)
+- [googleCloudStorageR](http://code.markedmondson.me/googleCloudStorageR/)
 - [googleAnalyticsR](http://code.markedmondson.me/googleAnalyticsR/)
 - [flexdashboard](http://rmarkdown.rstudio.com/flexdashboard/)
-
-![]
 
 ```{r selected_data}
 selected_data <- reactive({
@@ -505,15 +505,3 @@ DT::renderDataTable({
 3. Select a metric to display in the daily time series chart from the "Show in Daily Totals Chart" dropdown 
 4. Gain insights! 
 5. Use the "Download button at top of "All" table to export data currently visible
-
-### Source Code {data-height=100 data-icon="fa-code-fork"}
-
-- GitHub Repository [repo-name](https://github.com/empirical-path/)
-
-Contact Us {data-icon="fa-envelope"}
-=====================================     
-
-#### Email Us:
-
-- **General Support:** [google.cloud@empiricalpath.com](mailto:google.cloud@empiricalpath.com)
-- **Developer Support:** [Justin Marciszewski](mailto:google.cloud@empiricalpath.com)
