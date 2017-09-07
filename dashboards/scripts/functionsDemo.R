@@ -5,14 +5,12 @@ library(googleCloudStorageR)
 
 ## set options
 gcs_global_bucket("rshiny-ga-article-dash")
-options(
-  googleAuthR.scopes.selected = c(
-    "https://www.googleapis.com/auth/cloud-platform"
-    )
-  )
+options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/cloud-platform"))
 
 ## functions 
-#' Setup VM
+
+#' Setup GCE VM
+#' 
 #' A helper function that sets up a GCE VM, waits for a period of time you set
 #' then opens the shiny app in your browser
 #' @param gce_vm_name STRING 
@@ -57,83 +55,79 @@ setup_vm <- function(gce_vm_name,
 }
 
 
-#' Choose GA Authentication
+#' Choose GA Authentication Method
 #' 
 #' create function so one can seamlessly auth with
-#' GA or on the VM without fear of auth errors :-)
+#' GA locally or VM without fear of errors :-)
 #' @return authentication method for GA
 choose_ga_auth <- function() {
-
+  
   message("[-] checking if in the cloud...")
-
+  
   if(is.null(gar_gce_auth())) {
-
+    
     message("[?] NO, not in the cloud on a GCE VM.")
     
     message(sprintf("[?] authenticating with user creds"))    
     gar_auth()
-
+    
   } else {    
-
+    
     message("[?] YES, in the cloud on a GCE VM!")
     
     message("[?] using VM's default creds for authentication...")
     gar_gce_auth()
-
+    
   }
 }
 
 
-#' Get GCS data
+#' Fetch demo data 
+#' 
+#' A function to fetch demo data from Google Cloud Storage 
+#' for use in a demo dashboard
 #' 
 #' @param paramViewId
 #' 
-#' @return 
-fetch_data <- function(paramViewId){
-
+#' @return rds files, saved locally
+fetch_demo_data <- function(sourceDirectory = "data/",
+                            destDirectory = "../data/",
+                            paramViewId){
+  
   message("[-] starting data fetch...")
   message("[-] choosing authentication method...")
-
+  
   ## auth
   choose_ga_auth()
   
-  ## set file directories for ease of switching 
-  sourceDirectory <- "data/"
-  destDirectory <- ""
-  
-  # file2 <- paste0("../data/gaAccountInfo_", paramViewId, ".rds")
-
   ### Get main data set 
-  # sourceData <- paste0("data/viewId_", paramViewId, ".rds")
-  # destData <- paste0("dashboards/data/viewId_", paramViewId, ".rds")
-  sourceData <- paste0("data/viewId_", paramViewId, ".rds")
-  destData <- paste0("viewId_", paramViewId, ".rds")
+  sourceData <- paste0(sourceDirectory, "viewId_", paramViewId, ".rds")
+  destData <- paste0(destDirectory, "viewId_", paramViewId, ".rds")
   
   if(!file.exists(destData)) {
-
-        message(sprintf("[!] '%s' does NOT exist!", sourceData))
-        message("[?] downloading...")
-        gcs_get_object(object_name = sourceData,
-                 saveToDisk = destData,
-                 overwrite = TRUE)
+    
+    message(sprintf("[!] '%s' does NOT exist!", sourceData))
+    message("[?] downloading...")
+    gcs_get_object(object_name = sourceData,
+                   saveToDisk = destData,
+                   overwrite = TRUE)
   } else {
     message(sprintf("[x] '%s' already exists :)", sourceData))
   }
   
-  ### get ga account info
-  ### 
-  sourceInfo <- paste0("data/gaAccountInfo_", paramViewId, ".rds")
-  destInfo <- paste0("gaAccountInfo_", paramViewId, ".rds")
+  ### get ga account info data
+  sourceInfo <- paste0(sourceDirectory, "gaAccountInfo_", paramViewId, ".rds")
+  destInfo <- paste0(destDirectory, "gaAccountInfo_", paramViewId, ".rds")
   
   if(!file.exists(destInfo)) {
-
+    
     message(sprintf("[!] '%s' does NOT exist!", destInfo))
     message("[?] downloading...")
-        gcs_get_object(object_name = sourceInfo,
-                 saveToDisk = destInfo,
-                 overwrite = TRUE)
+    gcs_get_object(object_name = sourceInfo,
+                   saveToDisk = destInfo,
+                   overwrite = TRUE)
   } else {
-
+    
     message(sprintf("[x] '%s' already exists :)", sourceInfo))
   }
 }
