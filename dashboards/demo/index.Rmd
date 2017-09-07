@@ -28,8 +28,8 @@ message(getwd())
 #' a GCE VM instance initilizing via Docker Container 
 
 ## load user defined functions
-source("../scripts/functionsDemo.R") ## REMOVE, FOR DEMO PURPOSES ONLY 
-fetch_demo_data(paramViewId = "demo") ## REMOVE, FOR DEMO PURPOSES ONLY 
+# source("../scripts/functionsDemo.R") ## REMOVE, FOR DEMO PURPOSES ONLY 
+# fetch_demo_data(paramViewId = "demo") ## REMOVE, FOR DEMO PURPOSES ONLY 
 # [END - DEMO ONLY] 
 ###############################################################################
 
