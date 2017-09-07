@@ -96,7 +96,8 @@ fetch_demo_data <- function(sourceDirectory = "data/",
   message("[-] choosing authentication method...")
   
   ## auth
-  choose_ga_auth()
+  # choose_ga_auth() # doesn't work?!
+  gar_gce_auth()
   
   ### Get main data set 
   sourceData <- paste0(sourceDirectory, "viewId_", paramViewId, ".rds")
