@@ -7,7 +7,7 @@ library(googleCloudStorageR)
 
 #### set options after loading packages 
 #### since packages load scopes by default :-)
-gcs_global_bucket("rshiny-ga-article-attribution-dashboard")
+gcs_global_bucket("rshiny-ga-article-dash")
 options(googleAuthR.scopes.selected = c("https://www.googleapis.com/auth/cloud-platform"))
 
 #### authenticate via OAuth 
@@ -23,16 +23,16 @@ gcs_upload(file = "dashboards/data/gaAccountInfo_demo.rds",
 
 ## launch VM 
 ### set parameters for ease of changing going forward 
-gce_project_id <- "ep---dev"
+gce_project_id <- "ep-prod"
 container_name <- "github-empirical-path-rshiny-ga-article-attribution-dashboard"
-# gce_vm_name <- "rshiny-ga-art-attr-dev" # dev
-gce_vm_name <- "rshiny-ga-art-attr" # production
+gce_vm_name <- "rshiny-ga-art-attr-dev" # dev
+# gce_vm_name <- "rshiny-ga-art-attr" # production
 gce_vm_type <- "n1-standard-1"
 gce_zone <- "us-east1-b"
 app_directory <- "/dashboards/demo/"
 
 ### set environment variables since it's the easiest way!
-Sys.setenv("GCE_AUTH_FILE" = "key_ep---dev.json")
+Sys.setenv("GCE_AUTH_FILE" = "key.json")
 Sys.setenv("GCE_DEFAULT_PROJECT_ID" = gce_project_id)
 Sys.setenv("GCE_DEFAULT_ZONE" = gce_zone)
 Sys.setenv("GCE_SSH_USER" = "justin")
