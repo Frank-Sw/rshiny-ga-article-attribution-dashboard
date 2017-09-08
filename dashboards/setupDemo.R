@@ -25,8 +25,8 @@ gcs_upload(file = "dashboards/data/gaAccountInfo_demo.rds",
 ### set parameters for ease of changing going forward 
 gce_project_id <- "ep-prod"
 container_name <- "github-empirical-path-rshiny-ga-article-attribution-dashboard"
-gce_vm_name <- "rshiny-ga-art-attr-dev" # dev
-# gce_vm_name <- "rshiny-ga-art-attr" # production
+# gce_vm_name <- "rshiny-ga-art-attr-dev" # dev
+gce_vm_name <- "rshiny-ga-art-attr-dash" # production
 gce_vm_type <- "n1-standard-1"
 gce_zone <- "us-east1-b"
 app_directory <- "/dashboards/demo/"
