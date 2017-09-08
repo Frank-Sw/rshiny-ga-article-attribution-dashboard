@@ -21,18 +21,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 ## print working directory for easier debugging/sanity
 message(getwd()) 
 
-###############################################################################
-# [START - DEMO ONLY] 
-#' Remove this code when replicating this demo
-#' This code is for automatically fetching demo data stored in GCS upon 
-#' a GCE VM instance initilizing via Docker Container 
-
-## load user defined functions
-# source("../scripts/functionsDemo.R") ## REMOVE, FOR DEMO PURPOSES ONLY 
-# fetch_demo_data(paramViewId = "demo") ## REMOVE, FOR DEMO PURPOSES ONLY 
-# [END - DEMO ONLY] 
-###############################################################################
-
 #' Set Master Parameter of GA View ID
 #' @param paramViewId a character string of the GA view
 paramViewId <- "demo" # demo
